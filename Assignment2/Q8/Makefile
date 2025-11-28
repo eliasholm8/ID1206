@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -O0 -lpthread
+CFLAGS = -O0 -lpthread --std=c17
 
 BINARIES = q8
 
