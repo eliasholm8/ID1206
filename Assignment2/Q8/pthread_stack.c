@@ -2,8 +2,14 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdatomic.h>
      
 int num_threads = 0;
+int id_glob = 0;
+pthread_mutex_t id_lock;
+pthread_mutex_t stack_lock;
+
+atomic_int id_cas = 0;
      
 typedef struct node { 
      int node_id;      //a unique ID assigned to each node
@@ -11,6 +17,8 @@ typedef struct node {
 } Node;
 
 Node *top; // top of stack
+
+_Atomic(Node *) top_cas = NULL;
 
 /*Option 1: Mutex Lock*/
 void push_mutex() { 
@@ -20,6 +28,16 @@ void push_mutex() {
 
      //update top of the stack below
      //assign a unique ID to the new node
+
+     pthread_mutex_lock(&id_lock);
+     new_node->node_id = id_glob++;
+     pthread_mutex_unlock(&id_lock);
+
+     pthread_mutex_lock(&stack_lock);
+     new_node->next = top;
+     top = new_node;
+     pthread_mutex_unlock(&stack_lock);
+
 }
 
 int pop_mutex() { 
@@ -28,7 +46,18 @@ int pop_mutex() {
 
      //update top of the stack below
 
-     return old_node->node_id;
+     int id = -1;
+
+     if (top != NULL) {
+          pthread_mutex_lock(&stack_lock);
+          old_node = top;
+          top = top->next;
+          id = old_node->node_id;
+          free(old_node);
+          pthread_mutex_unlock(&stack_lock);
+     }
+
+     return id;
 }
 
 /*Option 2: Compare-and-Swap (CAS)*/
@@ -36,9 +65,18 @@ void push_cas() {
      Node *old_node;
      Node *new_node;
      new_node = malloc(sizeof(Node)); 
-
+     
      //update top of the stack below
      //assign a unique ID to the new node
+     
+     new_node->node_id = atomic_fetch_add(&id_cas, 1);
+
+     do {
+          old_node = atomic_load(&top_cas);
+          new_node->next = old_node; 
+     } while (!atomic_compare_exchange_weak(&top_cas, &old_node, new_node));
+     
+
 }
 
 int pop_cas() { 
@@ -47,7 +85,16 @@ int pop_cas() {
 
      //update top of the stack below
 
-     return old_node->node_id;
+     do {
+          old_node = atomic_load(&top_cas);
+          new_node = old_node->next;
+          
+     } while (!atomic_compare_exchange_weak(&top_cas, &old_node, new_node));
+     
+     int id = old_node->node_id;
+     free(old_node);
+
+     return id;
 }
 
 /* the thread function */
