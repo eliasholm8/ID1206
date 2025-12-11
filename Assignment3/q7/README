@@ -1,0 +1,3 @@
+Program that benchmarks how different number of pages and page sizes affect runtime and page faults.
+
+Usage: ./q7 <num_pages> <use_huge_pages (0 or 1)>
