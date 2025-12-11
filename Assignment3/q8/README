@@ -1,0 +1,3 @@
+Program that simulates active and inactive memory pages.
+
+Usage: ./q8 <number_of_pages> <sleep_time>
