@@ -119,6 +119,7 @@ void *thread_func(void *args) {
      }
      
      printf("Thread %d: exit\n", my_id);
+     free(arg);
      pthread_exit(0);
 }
 
