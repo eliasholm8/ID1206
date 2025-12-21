@@ -1,0 +1,6 @@
+Program which writes data to memory mapped file.
+
+USAGE:
+Run make to compile and generate file for the Program
+
+./q8 to run the program.
