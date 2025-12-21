@@ -22,10 +22,12 @@ int main() {
         printf("Child process (pid=%d); mmap address: %p \n", getpid(), mapped_ptr);
 
         memcpy(mapped_ptr, "01234", 5);
+        msync(mapped_ptr, FILE_SIZE, MS_SYNC);
 
         char buffer[6];
         memcpy(buffer, mapped_ptr + 4096, 5);
         buffer[5] = '\0';
+
         
         printf("Child process (pid=%d); read from mmaped_ptr [4096]: %s\n", getpid(), buffer);
 
@@ -33,16 +35,19 @@ int main() {
         printf("Parent process (pid=%d); mmap address: %p \n", getpid(), mapped_ptr);
 
         memcpy(mapped_ptr + 4096, "56789", 5);
-
+        msync(mapped_ptr, FILE_SIZE, MS_SYNC);
         
         char buffer[6];
         memcpy(buffer, mapped_ptr, 5);
         buffer[5] = '\0';
+
+        
         
         printf("Parent process (pid=%d); read from mmaped_ptr [0]: %s\n", getpid(), buffer);
-
+        
         wait(NULL);
         
     }
-
+    
+    printf("\n");
 }
