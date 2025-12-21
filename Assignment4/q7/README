@@ -1,0 +1,4 @@
+Program used to benchmark the time it takes to write and read data to a file of num_of_bytes bytes and with num_of_threads threads.
+
+Compile: make
+Usage: .q7 <num_of_bytes> <num_of_threads>
